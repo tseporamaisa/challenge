@@ -1,0 +1,17 @@
+---
+title: "Challenge Documentation"
+author: "Tsepo Ramaisa"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```     
+     
+# Background    
+   
+## Business overview    
+     
+# Proposed solution    
+
+

@@ -1,0 +1,163 @@
+{
+    "created_at": "Mon Feb 01 14:08:11 +0000 2021",
+    "id": 1356242948707541001,
+    "id_str": "1356242948707541001",
+    "text": "@CharlesHSavage @janFMaritz @EasyEquities Hi there\nPls ensure you are using the correct reference nr when making de\u2026 https://t.co/VCM1nI9S6f",
+    "display_text_range": [
+        42,
+        140
+    ],
+    "source": "<a href=\"http://twitter.com/download/android\" rel=\"nofollow\">Twitter for Android</a>",
+    "truncated": true,
+    "in_reply_to_status_id": 1356237555033911304,
+    "in_reply_to_status_id_str": "1356237555033911304",
+    "in_reply_to_user_id": 211425293,
+    "in_reply_to_user_id_str": "211425293",
+    "in_reply_to_screen_name": "CharlesHSavage",
+    "user": {
+        "id": 3198404121,
+        "id_str": "3198404121",
+        "name": "Jess J",
+        "screen_name": "jessjoubert10",
+        "location": null,
+        "url": null,
+        "description": "*live*love*laugh",
+        "translator_type": "none",
+        "protected": false,
+        "verified": false,
+        "followers_count": 171,
+        "friends_count": 62,
+        "listed_count": 0,
+        "favourites_count": 308,
+        "statuses_count": 286,
+        "created_at": "Thu Apr 23 16:41:50 +0000 2015",
+        "utc_offset": null,
+        "time_zone": null,
+        "geo_enabled": false,
+        "lang": null,
+        "contributors_enabled": false,
+        "is_translator": false,
+        "profile_background_color": "C0DEED",
+        "profile_background_image_url": "http://abs.twimg.com/images/themes/theme1/bg.png",
+        "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
+        "profile_background_tile": false,
+        "profile_link_color": "1DA1F2",
+        "profile_sidebar_border_color": "C0DEED",
+        "profile_sidebar_fill_color": "DDEEF6",
+        "profile_text_color": "333333",
+        "profile_use_background_image": true,
+        "profile_image_url": "http://pbs.twimg.com/profile_images/1272740889031516161/enO80V5z_normal.jpg",
+        "profile_image_url_https": "https://pbs.twimg.com/profile_images/1272740889031516161/enO80V5z_normal.jpg",
+        "profile_banner_url": "https://pbs.twimg.com/profile_banners/3198404121/1509090804",
+        "default_profile": true,
+        "default_profile_image": false,
+        "following": null,
+        "follow_request_sent": null,
+        "notifications": null
+    },
+    "geo": null,
+    "coordinates": null,
+    "place": null,
+    "contributors": null,
+    "is_quote_status": false,
+    "extended_tweet": {
+        "full_text": "@CharlesHSavage @janFMaritz @EasyEquities Hi there\nPls ensure you are using the correct reference nr when making deposits as the acc numbers are very similar. In some cases, clients use deposit page details for EFT from TFSA acc but then that shows TFSA ref not ZAR ref. Have you got a ticket nr for me to investigate pls",
+        "display_text_range": [
+            42,
+            321
+        ],
+        "entities": {
+            "hashtags": [],
+            "urls": [],
+            "user_mentions": [
+                {
+                    "screen_name": "CharlesHSavage",
+                    "name": "Charles H Savage",
+                    "id": 211425293,
+                    "id_str": "211425293",
+                    "indices": [
+                        0,
+                        15
+                    ]
+                },
+                {
+                    "screen_name": "janFMaritz",
+                    "name": "johannes",
+                    "id": 738320743,
+                    "id_str": "738320743",
+                    "indices": [
+                        16,
+                        27
+                    ]
+                },
+                {
+                    "screen_name": "EasyEquities",
+                    "name": "EasyEquities",
+                    "id": 2408634144,
+                    "id_str": "2408634144",
+                    "indices": [
+                        28,
+                        41
+                    ]
+                }
+            ],
+            "symbols": []
+        }
+    },
+    "quote_count": 0,
+    "reply_count": 0,
+    "retweet_count": 0,
+    "favorite_count": 0,
+    "entities": {
+        "hashtags": [],
+        "urls": [
+            {
+                "url": "https://t.co/VCM1nI9S6f",
+                "expanded_url": "https://twitter.com/i/web/status/1356242948707541001",
+                "display_url": "twitter.com/i/web/status/1\u2026",
+                "indices": [
+                    117,
+                    140
+                ]
+            }
+        ],
+        "user_mentions": [
+            {
+                "screen_name": "CharlesHSavage",
+                "name": "Charles H Savage",
+                "id": 211425293,
+                "id_str": "211425293",
+                "indices": [
+                    0,
+                    15
+                ]
+            },
+            {
+                "screen_name": "janFMaritz",
+                "name": "johannes",
+                "id": 738320743,
+                "id_str": "738320743",
+                "indices": [
+                    16,
+                    27
+                ]
+            },
+            {
+                "screen_name": "EasyEquities",
+                "name": "EasyEquities",
+                "id": 2408634144,
+                "id_str": "2408634144",
+                "indices": [
+                    28,
+                    41
+                ]
+            }
+        ],
+        "symbols": []
+    },
+    "favorited": false,
+    "retweeted": false,
+    "filter_level": "low",
+    "lang": "en",
+    "timestamp_ms": "1612188491404"
+}
