@@ -2,16 +2,122 @@
 title: "Challenge Documentation"
 author: "Tsepo Ramaisa"
 output: pdf_document
+fontsize: 12pt
+urlcolor: blue
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```     
      
-# Background    
-   
-## Business overview    
+# Background     
+      
+EasyEquities is a South African based investment platform that boasts itself as a low cost, easy to use platform where one can buy equities, exchange-traded funds (ETFs) and exchange-traded notes (ETNs), as well as other baskets and bundles.     
+The company is currently seeking to improve it's marketing department and one of it's strategies is improving it's social media presence and monitoring the performance of all social media campaigns.    
      
-# Proposed solution    
+We have been contracted by EasyEquities to design and build the **first phase** a data processing system that allows for the collection, processing and storing of all brand mentions and any "desired" keywords that may be linked to marketing campaigns undertaken.
+   
+## The first phase      
+     
+The first phase of the project is concerned with the collection of data from Twitter, specifically the collection of a stream of tweets about a desired topic identified by a particular keyword (e.g company handle, particular # tag e.t.c). The primary users of the collected data are:     
+      
+- **Marketing department**: The marketing department often run marketing campaigns and promotions on Twitter from the project they are hopping to be able to easily monitor the performance and engagement of said campaigns. They also hope to monitor general client sentiment of the company and its products. The collected data will be used to populate dashboards that show engagement and sentiment aggregates and varying granularity starting form hourly views to weekly views.       
+      
+- **Data Science team**: The data science team is hoping to use the data collected to build ML models, specifically sentiment analysis models fine tuned for sentiment classification of financial text. The team is experienced with relational databases so being able to query the data using SQL is crucial.
+     
+# Proposed solution for phase 1    
+As Per client request the solution will be built on AWS. The components chosen in the pipeline were heavily influenced by the decision to create a serverless architecture. A serverless architecture was chosen for the following reasons:     
+     
+- Avoid idle server costs that would otherwise be incurred
+- Avoid admin overhead (e,g server maintenance)
+- Easier on demand scaling of the solution
+- Latency due to cold starts is not an issue as the solution facilitates long running timed processes
+- Will not be introducing "vendor-lock-in" as the client already heavily relies on AWS.      
+     
+The picture bellow shows components used in the design of the flow of data      
+      
+```{r echo=FALSE, message=FALSE, warning=FALSE, out.width = "100%"}
+knitr::include_graphics("aws_stack.png")
+```
+     
+    
+## API Gateway (1)      
+This is a RESTful API that allow the client (front end app) to trigger and kill jobs. In the first phase of the project the API only has one endpoint to trigger a job. The trigger stream endpoint takes two parameters, stream duration in seconds and a string of keyword/s (e.g company Twitter handle) to filter desired tweets. These parameters are published to a SNS topic.    
+      
+More endpoint to be added in upcoming phases of the project     
+     
+## Simple Notification Service (2)     
+This is a pub-sub setup with the API Gateway publishing to topics and Lambda functions subscribed to the topics and consuming massages. The main purposed of having SNS as the middle man here is to allow for the easy integration of other phases of the project. The SNS will have different topics, each with different consuming lambdas for different data sources. For the first phase there is only one topic relate to sourcing Twitter data.     
+      
+## Lambda function (3)       
+     
+The lambda function is subscribed to a topic and publishing a massage triggers the function with parameters from the client. The lambda function then calls an ECS fargate task which which spins up a container running the streaming app
+     
+## ECS on Fargate (4)      
+      
+This is the compute engine that will actually run the streaming app. Since we need to support long running jobs (as per client specification through stream_duration), a lambda function (which can currently only run jobs that take [up to 15 minutes](https://docs.aws.amazon.com/lambda/latest/dg/gettingstarted-limits.html)) alone will not suffice.
+       
+Running our app on ECS rather that a self managed EC2 instance has the following benefits particular to our use case:      
+
+- Resources to be required by the data streaming app will greatly vary from marketing campaign to marketing campaign with campaigns that receive the most engagement needing the most resources (i.e heavier flow in the stream). By using ECS we can take advantage of [Cluster Auto Scaling ](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/cluster-auto-scaling.html) which handled the auto scaling of app instances. This saves costs that may result in over provisioning servers and avoids problems of under provisioning.
+- Given how the client intends to use the system (monitoring campaigns), an EC2 solution might have a lot of idle periods between marketing campaigns. With ECS charges will be incurred when tasks run.     
+     
+### The container      
+The definition of the docker image to be used can be found [here](https://github.com/tseporamaisa/challenge/blob/main/tweets_streaming/Dockerfile)     
+     
+### The streaming script     
+     
+When run the python script (found [here](https://github.com/tseporamaisa/challenge/blob/main/tweets_streaming/tweets_stream_producer.py)) connects to [Twitter's streaming API](https://developer.twitter.com/en/docs/twitter-api/v1/tweets/filter-realtime/overview) which allows tweets to be downloaded in real time. The keywords specified by the user are used to filter the tweets and the stream duration (also specified by the client) controls how long tweets are streamed (The parameters are passed as environment variables from lambda to ECS task). The job of the script is to extract all tweet related data and forward it as is ti kinesis, nothing more. The script leverages the following key modules:    
+     
+- [Tweepy](https://docs.tweepy.org/en/latest/getting_started.html#introduction): A mature module for interacting with Twitter's APIs. It simplifies authentication, error handling, rate limit checking e.t.c.    
+- [Boto3](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html): Boto is the AWS SDK for Python. It enables Python developers to create, configure, and manage AWS services, such as EC2 and S3. Boto provides an easy to use, object-oriented API, as well as low-level access to AWS services. In our case it is used to stream tweets to Kinesis Firehose as they are received.     
+     
+## Kinesis Firehose (5)      
+     
+This buffers the raw tweets stream and uploads it to  S3 data lake. A json representation of a typical tweet can be found [here](https://github.com/tseporamaisa/challenge/blob/main/tweets_streaming/sample_raw_tweet.json)      
+      
+## S3 Bucket (6)    
+    
+The data lake that stores the the tweets as received from kinesis. Storing the raw data will allow the possibility of the data to be used for other purposes the client has not thought of yet. Uploading of the data in the bucket will fire off a new object created event to SQS, creating a job for the listening lambda consumer.       
+      
+## SQS (7)      
+     
+The queue is an event source for the downstream lambda and is included as a middle man between S3 and the procession lambda for the following reasons:       
+      
+- To decouple the producer of events (S3) and the consumer of events(Lambda) as they could potentially have different processing rates. The queue acts as a buffer to not overwhelm the lambda is cases of high data flow. An experiment using the company's handle and name resulted (on average) in 2 tweets per second. This rate could potentially increase exponentially for high engagement campaigns.
+- In the first phase of the project sentiment analysis on the tweets will be done using the AWS comprehend service which has request rate limits (a generous [20 requests per second](https://docs.aws.amazon.com/comprehend/latest/dg/guidelines-and-limits.html)). Having the queue will allow us to ensure we adhere to the rate limit during floods without damping our ingestion rate.    
+     
+## Lambda (8)     
+    
+Responsible for processing the job queue. The jobs are processing data in the data lake as it is uploaded. The processing involves the extraction of data from the raw uploads and enriching it (e.g getting a sentiment classification for each tweet). The function has not been implemented but when it is it will achieve the following:       
+
+* Extract the following fields from the tweet data    
+    + tweet.text: The actual body of the tweet. Will need to first check the value of the boolean field tweet.trancated, if true the text should be extracted from tweet.extended_tweet.full_text
+    + tweet.id: unique identifier of each tweet
+    + tweet.created_at: Date the tweet was posted.
+    + tweet.user.id: unique identifier of person who posted the tweet
+    + tweet.user.follower_count: number of followers the poster has. may help determine how influential the person is
+    + tweet.user.screen_name: display name of poster
+    + tweet.retweet_count: how many times the tweet was retweeted an indicator of engagement with the tweet
+    + tweet.favorite_count: another indicator of engagement       
+* Make a call the [comprehend service](https://aws.amazon.com/comprehend/) to get sentiment classification of the tweet and add it as a field
+* Tokenize each tweet removing stop-words (could use [Spacy's](https://spacy.io/) processing pipeline for performance and possibly lemmatize to reduce cardinality). Tokenizing will allow creation of word clouds in the dashboards.    
+* Send the transformed data to the enriched data bucket as Parquet files. The columnar structure and metadata should result in efficient querying using Redshift spectrum     
+      
+## Redshift Spectrum (10)      
+This allows for querying the enriched data directly from our S3 bucket (without having to load it into Redshift tables) using SQL. Using spectrum cuts down costs as the client only pays for the S3 storage and reading of data through spectrum. Another added benefit is since spectrum uses an external data catalog (e.g Glue), one can query the data using Athena and write Glue ETL jobs. 
+       
+     
+# Possible improvements     
+    
+There are a few ideas I had after this write up about possible improvements not implemented due to time constraints (apart from the obvious proper documentation of scripts, having tests and having some level of error handling)     
+      
+- In the script that streams Tweets, the CustomStreamListener class overrides the on_error method of the parent class to allow the client to auto connect with backoff should the stream connection be interrupted(e.g by rate limit). This behavior is also recommended in the [Twitter documentation](https://developer.twitter.com/en/docs/tutorials/consuming-streaming-data). Rather than just implementing the backoff logic, I think it would be worth exploring the possibility sending out a notification for a persistent connection loss. The same goes for the publishing of data into kinesis.     
+- The Tweepy module is able to run the stream process in a separate thread (by specifying is_async=True), leaving the main thread open to spin off other streams with different key words. I think instead of the lambda firing up a container for each request, it may be worth exploring a way to send multiple jobs to the same container.
+      
+
+        
+
+    
 
 
